@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: PurgeOps read-only cross-account IAM role for cloud cost scanning
+
+Parameters:
+  ExternalId:
+    Type: String
+    Description: Unique ID provided by PurgeOps to prevent confused-deputy attacks
+  PurgeOpsAccountId:
+    Type: String
+    Default: '954903081570'
+    Description: PurgeOps AWS account ID (trusted principal)
+
+Resources:
+  PurgeOpsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: PurgeOpsReadOnlyRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${PurgeOpsAccountId}:user/purgeops-service'
+            Action: 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                'sts:ExternalId': !Ref ExternalId
+      Policies:
+        - PolicyName: PurgeOpsReadOnlyAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ec2:Describe*'
+                  - 'elasticloadbalancing:Describe*'
+                  - 'rds:Describe*'
+                  - 'ce:GetCostAndUsage'
+                  - 'ce:GetCostForecast'
+                  - 'cloudwatch:GetMetricData'
+                  - 'cloudwatch:GetMetricStatistics'
+                  - 'cloudwatch:ListMetrics'
+                Resource: '*'
+
+Outputs:
+  RoleArn:
+    Description: Role ARN to paste back into PurgeOps
+    Value: !GetAtt PurgeOpsRole.Arn
+  AccountId:
+    Description: Your AWS Account ID
+    Value: !Ref AWS::AccountId
