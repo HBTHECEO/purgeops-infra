@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: PurgeOps read-only cross-account IAM role for cloud cost scanning
+Description: PurgeOps cross-account IAM role for cloud cost scanning and approved cleanup actions
 
 Parameters:
   ExternalId:
@@ -41,6 +41,19 @@ Resources:
                   - 'cloudwatch:GetMetricStatistics'
                   - 'cloudwatch:ListMetrics'
                 Resource: '*'
+        - PolicyName: PurgeOpsApprovedExecutionAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ec2:CreateImage'
+                  - 'ec2:TerminateInstances'
+                  - 'ec2:CreateSnapshot'
+                  - 'ec2:DeleteVolume'
+                  - 'ec2:CreateTags'
+                  - 'elasticloadbalancing:DeleteLoadBalancer'
+                Resource: '*'
 
 Outputs:
   RoleArn:
@@ -49,3 +62,4 @@ Outputs:
   AccountId:
     Description: Your AWS Account ID
     Value: !Ref AWS::AccountId
+    Add approved execution access policy for terminate/delete actions
